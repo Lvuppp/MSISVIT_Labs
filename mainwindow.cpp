@@ -25,18 +25,21 @@ void MainWindow::on_pushButton_clicked()
 
     map<string,int> operators = pars.getOperators();
     map<string,int> operations = pars.getOperations();
-    int i=1,j=1, amountOfOperations = 0, amountOfOperators = 0;
+    int i=0,j=0, amountOfOperations = 0, amountOfOperators = 0;
 
 
     for(auto v = operators.begin(); v != operators.end(); v++){
-        ui->variables->addItem(QString::number(i++) + QString::fromStdString(") " + v->first)+ " count: " + QString::number(v->second));
+        ui->variables->addItem(QString::number(++i) + QString::fromStdString(") " + v->first)+ " count: " + QString::number(v->second));
         amountOfOperators += v->second;
     }
 
+    qDebug() << amountOfOperators;
     for(auto v = operations.begin(); v != operations.end(); v++){
-        ui->functions->addItem(QString::number(j++) + QString::fromStdString(") " + v->first)+ " count: " + QString::number(v->second));
+        ui->functions->addItem(QString::number(++j) + QString::fromStdString(") " + v->first)+ " count: " + QString::number(v->second));
         amountOfOperations += v->second;
     }
+
+    qDebug() << amountOfOperations;
 
     ui->label_3->setText("Словарь программы: " + QString::number(i + j));
     ui->label_4->setText("Длинна программы: " + QString::number(amountOfOperations + amountOfOperators));

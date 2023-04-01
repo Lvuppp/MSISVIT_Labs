@@ -58,7 +58,7 @@
        <item>
         <widget class="QLabel" name="label">
          <property name="text">
-          <string>Operations</string>
+          <string>Operators</string>
          </property>
         </widget>
        </item>
@@ -72,7 +72,7 @@
        <item>
         <widget class="QLabel" name="label_2">
          <property name="text">
-          <string>Operators</string>
+          <string>Operands</string>
          </property>
         </widget>
        </item>

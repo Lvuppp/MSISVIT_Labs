@@ -17,75 +17,12 @@ map<string,int> Parser::getOperations()
     return _operations;
 }
 
-//void Parser::findFunctions()
-//{
-//    smatch sm, sm2,sm3,sm4;
-
-//    string str = _str;
-//    regex reg("(int|float|double|short|long\\slong|char|bool|void|string)\\s+(\\w+)\\s*\\((.*)\\)");
-//    regex reg2("(int|float|double|short|long\\slong|char|bool|void|string)\\s+\\w*,?");
-
-//    while(regex_search(str,sm,reg)){
-//        bool isOverload = false;
-
-//        for(auto i = 0; i < _functions.size(); i++){
-//            if(sm[2].str() == _functions[i].getName()){
-//                isOverload = true;
-//                break;
-//            }
-//        }
-
-//        if(isOverload){
-//            str = sm.suffix();
-//            continue;
-//        }
-
-//        regex reg2( "(int|float|double|short|long\\slong|char|bool|void|string)");
-//        regex reg3( "(int|float|double|short|long\\slong|char|bool|void|string)\\s+"+ sm[2].str() +"\\s*\\((.*)\\)");
-//        vector<pair<int,int>> pos;
-//        vector<string> args,overloadArgs;
-//        vector<Function> overloadsFunctions;
-//        string tmp =sm[3].str();
-//        auto strTmp = QString::fromStdString(str).split('\n');
-//        int overloadsCount = 0 ;
-
-//        while(regex_search(tmp,sm2,reg2)){
-//            args.push_back(sm2[1].str());
-//            tmp = sm2.suffix();
-//        }
-
-//        for(auto i = 0; i < strTmp.length(); i++){
-//            auto line = strTmp[i].toStdString();
-
-//            while(regex_search(line,sm3,reg3)){
-//                if(overloadsCount != 0){
-//                    pos.push_back(make_pair(i+1,sm2.position() + 1));
-
-//                    string tmp1 = sm3[2].str();
-//                    overloadArgs.clear();
-
-//                    while(regex_search(tmp1,sm4,reg2)){
-//                        overloadArgs.push_back(sm4[1].str());
-//                        tmp1 = sm4.suffix();
-//                    }
-
-//                    overloadsFunctions.push_back(Function(sm3[1].str(),sm[2].str(),overloadArgs));
-//                }
-//                overloadsCount++;
-//                line = sm3.suffix();
-//            }
-//        }
-//        _functions.push_back(Function(sm[1].str(), sm[2].str(),overloadsFunctions,args));
-//        str = sm.suffix();
-//    }
-
-//}
-
 void Parser::findOperators()
 {
-    regex reg("max|min|abs|sqrt|delete|continue|break|return|if|else|for|do|while|"
-              "\\+\\+|--|!=|==|<=|>=|<<|>>|&&|\\|\\||[\\+\\-\\*/%&\\|\\^~!=<>]");
-    smatch tmp,tmp2;
+    regex reg("fail|max|min|abs|sqrt|delete|continue|break|return|if|else|for|do|while|"
+              "\\+\\+|--|!=|==|<=|>=|<<|>>|&&|\\|\\||[\\+\\-\\*/%&\\|\\^~!=<>\\;]");
+    string operatios = "\\+\\+|--|!=|==|&&|\\|\\||[\\+\\-\\*/%&\\|\\^~!<>]";
+    smatch tmp,tmp2,tmp3,tmp4,tmp5;
     string str = _str;
 
     while(regex_search(str,tmp,reg)){
@@ -102,7 +39,6 @@ void Parser::findOperators()
     regex reg2("(\\w+)\\s*\\((.*)\\)");
     str = _str;
     while(regex_search(str,tmp2,reg2)){
-        qDebug() << QString::fromStdString(tmp2[1].str());
 
         if(_operations.count(tmp2[1].str()) > 0){
             _operations[tmp2[1].str()]++;
@@ -114,20 +50,35 @@ void Parser::findOperators()
         str = tmp2.suffix();
     }
 
-    int amountOfFigureBrackets = 0,amountOfCircleBrakcets = 0;
+    int amountOfFigureBrackets = 0;
+
+    regex reg3("\\((.*)\\)");
+    regex reg5("(\\(.+?\\s*(&&|\\|\\|)\\s*.+?\\))");
+    str = _str;
+    while(regex_search(str,tmp3,reg3)){
+        auto strTmp = tmp3[1].str();
+        while(regex_search(strTmp,tmp5,reg5)){
+            qDebug() << QString::fromStdString(tmp5[1].str());
+            if(_operations.count("(..)") == 0){
+                _operations.emplace(std::make_pair("(..)",1));
+            }
+            else{
+                _operations["(..)"]++;
+            }
+
+            strTmp = tmp5.suffix();
+        }
+
+        str = tmp3.suffix();
+    }
 
     for (auto i = 0; i < _str.length(); ++i) {
-        if(_str[i] == '('){
-            amountOfCircleBrakcets++;
-        }
+
         if(_str[i] == '{'){
             amountOfFigureBrackets++;
         }
     }
 
-    if(amountOfFigureBrackets > 0){
-        _operations.emplace(std::make_pair("(..)",amountOfCircleBrakcets));
-    }
     if(amountOfFigureBrackets > 0){
         _operations.emplace(std::make_pair("{..}",amountOfFigureBrackets));
     }
@@ -139,7 +90,7 @@ void Parser::findVariables()
     regex reg("((auto|int|float|double|short|long\\slong|char|bool|void|string|vector<.+>)\\**\\s(\\w+)(\\s*=.+)*\\s*(;|,))");
     smatch tmp,tmp2,tmp3,tmp4;
     string str = _str;
-    string operatios = "\\+\\+|--|!=|==|<=|>=|<<|>>|&&|\\|\\||[\\+\\-\\*/%&\\|\\^~!=<>,;]";
+    string operatios = "\\+\\+|--|!=|==|<=|>=|<<|>>|&&|\\|\\||[\\+\\-\\*/%&\\|\\^~!=<>\\,\\;]";
 
     while(regex_search(str,tmp,reg)){
         regex reg2("(\\s*|" + operatios+ ")" + tmp[3].str()+"(\\s+|" + operatios+ ")");
@@ -158,18 +109,28 @@ void Parser::findVariables()
     }
 
     str = _str;
-    regex reg2("(\\s*|" + operatios+ ")(\\d+|\"\\w*\"|\'w*\')(\\s+|" + operatios+ ")");
+    regex reg2("\\s*(\\d+)\\s*");
 
     while(regex_search(str,tmp3,reg2)){
-
-        if(_operators.count(tmp3[2].str()) > 0){
-            _operators[tmp3[2].str()]++;
+        if(_operators.count(tmp3[1].str()) > 0){
+            _operators[tmp3[1].str()]++;
         }
         else{
-            _operators.emplace(std::make_pair(tmp3[2].str(),1));
+            _operators.emplace(std::make_pair(tmp3[1].str(),1));
         }
         str = tmp3.suffix();
     }
+    str = _str;
 
+    regex reg3("\\s*('.')|(\".+\")\\s*");
 
+    while(regex_search(str,tmp4,reg3)){
+        if(_operators.count(tmp4[0].str()) > 0){
+            _operators[tmp4[0].str()]++;
+        }
+        else{
+            _operators.emplace(std::make_pair(tmp4[0].str(),1));
+        }
+        str = tmp4.suffix();
+    }
 }
